@@ -1,7 +1,7 @@
 """Stage 2 · Interpretable Feature Engineering (`pipeline/features.py`).
 
 Synthesized by sovLoop (Model: qwen3.5:9b)
-Active Operations: passthrough
+Active Operations: synth:square:diff_srs_margin, synth:square:prior_srs_prob, synth:log1p:diff_log_seed
 """
 
 from __future__ import annotations
@@ -9,8 +9,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-ACTIVE_FEATURE_OPS: tuple[str, ...] = ()
-PRIORITY_SIGNAL_COLUMNS: list[str] = ['prior_srs_prob', 'diff_srs_margin', 'diff_sos_margin', 'diff_log_seed', 'diff_sos_win_rate', 'diff_seed_num']
+ACTIVE_FEATURE_OPS: tuple[str, ...] = ('synth:square:diff_srs_margin', 'synth:square:prior_srs_prob', 'synth:log1p:diff_log_seed')
+PRIORITY_SIGNAL_COLUMNS: list[str] = ['prior_srs_prob', 'prior_elo_prob', 'diff_log_seed', 'diff_srs_margin', 'diff_elo_max', 'diff_quality_win_score']
 
 
 def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
@@ -27,7 +27,12 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
             if len(fallback_cols) >= 4:
                 break
 
-    # Passthrough: no extra engineered columns
+    if 'diff_srs_margin' in out.columns:
+        out['diff_srs_margin_sq'] = np.square(out['diff_srs_margin']).clip(0.0, 25.0)
+    if 'prior_srs_prob' in out.columns:
+        out['prior_srs_prob_sq'] = np.square(out['prior_srs_prob']).clip(0.0, 25.0)
+    if 'diff_log_seed' in out.columns:
+        out['diff_log_seed_log1p'] = np.sign(out['diff_log_seed']) * np.log1p(np.abs(out['diff_log_seed']))
 
     return out.replace([np.inf, -np.inf], 0.0).fillna(0.0)
 
