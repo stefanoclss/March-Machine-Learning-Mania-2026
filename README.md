@@ -2,7 +2,7 @@
 
 [![Autonomous Synthesis](https://img.shields.io/badge/Synthesized%20By-sovLoop%20(Stealth)-0A66C2?style=for-the-badge)](#how-this-pipeline-was-built)
 [![Foundation LLM](https://img.shields.io/badge/Model-qwen3.5%3A9b-111827?style=for-the-badge)](#how-this-pipeline-was-built)
-[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.16702-059669?style=for-the-badge)](#verified-validation-benchmark)
+[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.17070-059669?style=for-the-badge)](#verified-validation-benchmark)
 [![Security](https://img.shields.io/badge/Zero--Pickle-CWE--502%20Compliant-374151?style=for-the-badge)](#governance--production-guarantees)
 [![Kaggle Public Notebook](https://img.shields.io/badge/Kaggle%20Notebook-Public%20Kernel-20BEFF?style=for-the-badge)](https://www.kaggle.com/code/stefanoclss/march-machine-learning-mania-2026)
 [![Kaggle Challenge](https://img.shields.io/badge/Challenge-Benchmark-0284C7?style=for-the-badge)](https://www.kaggle.com/competitions/march-machine-learning-mania-2026)
@@ -14,7 +14,7 @@
 
 ## Executive Overview
 
-Predict `Pred` (binary classification) across `81` structured predictors on `march-machine-learning-mania-2026` under strict leak-free 5-fold out-of-fold validation to minimize `BRIER`.
+Predict `Pred` (binary classification) across `91` structured predictors on `march-machine-learning-mania-2026` under strict leak-free 5-fold out-of-fold validation to minimize `BRIER`.
 
 Production data science teams need pipelines that are not only accurate, but **readable, explainable, and maintainable**. Every transformation in this repository is organized by pipeline topology stage (`preprocessing`, `feature_engineering`, `objective`, `models`, `postprocess`) and validated incrementally via **sovLoop** (operating in private stealth mode).
 
@@ -36,9 +36,9 @@ Production data science teams need pipelines that are not only accurate, but **r
 | **Challenge / Dataset** | **March Machine Learning Mania 2026** (`march-machine-learning-mania-2026`) |
 | **Target Variable (`y`)** | `Pred` (`binary_classification`) |
 | **Evaluation KPI** | `BRIER` (Lower is better) |
-| **Baseline 5-Fold OOF Score** | `0.17162` |
-| **Champion 5-Fold OOF Score** | **`0.16702`** (`+0.00460` verified lift vs. baseline) |
-| **Cross-Fold Stability (Std. Dev.)** | `±0.01088` across `5` strict folds |
+| **Baseline 5-Fold OOF Score** | `0.17154` |
+| **Champion 5-Fold OOF Score** | **`0.17070`** (`+0.00084` verified lift vs. baseline) |
+| **Cross-Fold Stability (Std. Dev.)** | `±0.01116` across `5` strict folds |
 | **Synthesis LLM** | `qwen3.5:9b` (via **sovLoop**) |
 
 ---
@@ -49,12 +49,8 @@ Every individual model inside the unrestricted ensemble is benchmarked independe
 
 | Model Family (`key`) | Standalone Val Score | Mean Fold Fit | Mean Fold Inference | Ensemble Weight | Deployment Role |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **TabArena ModernNCA** (`nca`) | `0.16472 ± 0.01000` | `308.5 ms` | `13.80 ms` | `8.5%` | `Best Solo Accuracy` |
-| **Optuna LightGBM** (`lgbm`) | `0.16493 ± 0.01152` | `1794.4 ms` | `4.33 ms` | `51.4%` | `Active Ensemble Member` |
-| **CatBoost Symmetric** (`catboost`) | `0.16564 ± 0.01144` | `3218.6 ms` | `4.79 ms` | `5.4%` | `Active Ensemble Member` |
-| **Optuna XGBoost** (`xgb`) | `0.16568 ± 0.01094` | `5582.5 ms` | `5.41 ms` | `22.6%` | `Active Ensemble Member` |
-| **CV-Tuned L2 Ridge Linear** (`ridge_l2`) | `0.16861 ± 0.00968` | `21.9 ms` | `1.45 ms` | `8.1%` | `Fastest Low-Latency` |
-| **TabArena RealMLP** (`realmlp`) | `0.16950 ± 0.01126` | `308.5 ms` | `14.32 ms` | `4.0%` | `Active Ensemble Member` |
+| **TabArena RealMLP** (`realmlp`) | `0.16916 ± 0.01092` | `308.5 ms` | `11.41 ms` | `0.0%` | `Best Solo Accuracy` |
+| **RFF Residual MLP** (`mlp`) | `0.16943 ± 0.01139` | `308.5 ms` | `9.78 ms` | `0.0%` | `Fastest Low-Latency` |
 
 ---
 
@@ -64,13 +60,8 @@ Every row below corresponds to a verified out-of-fold promotion recorded as an *
 
 | Iteration | Module Evolved | Active Synthesis Operations | 5-Fold OOF `BRIER` | Lift | Engineering Rationale |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Gen 0** | `scaffold` | Baseline initialization | `0.17162` | `baseline` | Deterministic 5-fold leak-free baseline anchor |
-| **Gen 1** | `pipeline/models.py` | `catboost_tuned` | `0.16767` | `+0.00396` | Coordinate-ascent probe on `model`: Evaluate single estimator `CatBoost Symmetric GBDT (Ordered Boosting)` |
-| **Gen 2** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head` | `0.16757` | `+0.00010` | Combining Optuna-tuned LightGBM, XGBoost, and RealMLP captures diverse nonlinear interactions for high-probability/margin cases where CatBoost residuals... |
-| **Gen 3** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head`, `ridge_l2_linear` | `0.16744` | `+0.00014` | Coordinate-ascent probe on `model`: Test 5-model ensemble adding `CV-Tuned L2 Ridge Linear Ensemble Head` |
-| **Gen 4** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head`, `ridge_l2_linear`, `modern_nca_head` | `0.16720` | `+0.00024` | Coordinate-ascent probe on `model`: Test 6-model ensemble adding `TabArena ModernNCA Soft Neighborhood Head` |
-| **Gen 5** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head`, `ridge_l2_linear`, `modern_nca_head`, `alignment_2d_convnext_unet` | `0.16715` | `+0.00005` | Coordinate-ascent probe on `model`: Test 7-model ensemble adding `2D Alignment ConvNeXt-Tiny U-Net + BiGRU + 3-View TTA (GPU)` |
-| **Gen 6** | `pipeline/features.py` (`feature_block_1`) | `synth:square:diff_srs_margin`, `synth:square:prior_srs_prob`, `synth:log1p:diff_log_seed` | `0.16702` | `+0.00013` | Explicitly synthesizing squared features for high-signal columns will ground the non-linear residual patterns, allowing GBDTs to model them as linear... |
+| **Gen 0** | `scaffold` | Baseline initialization | `0.17154` | `baseline` | Deterministic 5-fold leak-free baseline anchor |
+| **Gen 1** | `pipeline/models.py` | `realmlp_tuned_head`, `rff_mlp_neural_head` | `0.17070` | `+0.00084` | Replacing the saturated L2 Ridge baseline with RealMLP and RFF MLP neural heads will capture non-linear feature interactions in high-value quantiles... |
 
 ---
 
@@ -78,13 +69,13 @@ Every row below corresponds to a verified out-of-fold promotion recorded as an *
 
 ```mermaid
 flowchart LR
-    DATA["Raw Data (81 predictors)"] --> SPLIT["5-Fold CV Split"]
+    DATA["Raw Data (91 predictors)"] --> SPLIT["5-Fold CV Split"]
     SPLIT --> PRE["1. Preprocessing: mean_impute"]
-    PRE --> FEAT["2. Features: synth:square:diff_srs_margin, synth:square:prior_srs_prob, synth:log1p:diff_log_seed"]
+    PRE --> FEAT["2. Features: raw_passthrough"]
     FEAT --> OBJ["3. Objective: standard_task_loss"]
-    OBJ --> M0["4. Ensemble: TabArena ModernNCA (9%) + Optuna LightGBM (51%) + CatBoost Symmetric (5%) + Optuna XGBoost (23%) + CV-Tuned L2 Ridge Linear (8%) + TabArena RealMLP (4%)"]
+    OBJ --> M0["4. Ensemble: realmlp_tuned_head, rff_mlp_neural_head"]
     M0 --> POST["5. Post-Processing: identity_passthrough"]
-    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.16702)"]
+    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.17070)"]
 ```
 
 | Deliverable | Role in Production Workflow |
