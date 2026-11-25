@@ -2,7 +2,7 @@
 
 [![Autonomous Synthesis](https://img.shields.io/badge/Synthesized%20By-sovLoop%20(Stealth)-0A66C2?style=for-the-badge)](#how-this-pipeline-was-built)
 [![Foundation LLM](https://img.shields.io/badge/Model-qwen3.5%3A9b-111827?style=for-the-badge)](#how-this-pipeline-was-built)
-[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.16754-059669?style=for-the-badge)](#verified-validation-benchmark)
+[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.16730-059669?style=for-the-badge)](#verified-validation-benchmark)
 [![Security](https://img.shields.io/badge/Zero--Pickle-CWE--502%20Compliant-374151?style=for-the-badge)](#governance--production-guarantees)
 [![Kaggle Public Notebook](https://img.shields.io/badge/Kaggle%20Notebook-Public%20Kernel-20BEFF?style=for-the-badge)](https://www.kaggle.com/code/stefanoclss/march-machine-learning-mania-2026)
 [![Kaggle Challenge](https://img.shields.io/badge/Challenge-Benchmark-0284C7?style=for-the-badge)](https://www.kaggle.com/competitions/march-machine-learning-mania-2026)
@@ -37,8 +37,8 @@ Production data science teams need pipelines that are not only accurate, but **r
 | **Target Variable (`y`)** | `Pred` (`binary_classification`) |
 | **Evaluation KPI** | `BRIER` (Lower is better) |
 | **Baseline 5-Fold OOF Score** | `0.17154` |
-| **Champion 5-Fold OOF Score** | **`0.16754`** (`+0.00400` verified lift vs. baseline) |
-| **Cross-Fold Stability (Std. Dev.)** | `±0.01155` across `5` strict folds |
+| **Champion 5-Fold OOF Score** | **`0.16730`** (`+0.00424` verified lift vs. baseline) |
+| **Cross-Fold Stability (Std. Dev.)** | `±0.01123` across `5` strict folds |
 | **Synthesis LLM** | `qwen3.5:9b` (via **sovLoop**) |
 
 ---
@@ -49,9 +49,10 @@ Every individual model inside the unrestricted ensemble is benchmarked independe
 
 | Model Family (`key`) | Standalone Val Score | Mean Fold Fit | Mean Fold Inference | Ensemble Weight | Deployment Role |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Optuna LightGBM** (`lgbm`) | `0.16533 ± 0.01133` | `1865.6 ms` | `6.88 ms` | `55.8%` | `Best Solo Accuracy` |
-| **CatBoost Symmetric** (`catboost`) | `0.16577 ± 0.01191` | `3297.1 ms` | `6.11 ms` | `29.0%` | `Active Ensemble Member` |
-| **Optuna XGBoost** (`xgb`) | `0.16594 ± 0.01157` | `5899.1 ms` | `5.63 ms` | `15.3%` | `Fastest Low-Latency` |
+| **Optuna LightGBM** (`lgbm`) | `0.16523 ± 0.01122` | `1865.6 ms` | `3.96 ms` | `43.8%` | `Best Solo + Fastest SLA` |
+| **CatBoost Symmetric** (`catboost`) | `0.16554 ± 0.01183` | `3297.1 ms` | `4.63 ms` | `22.9%` | `Active Ensemble Member` |
+| **Optuna XGBoost** (`xgb`) | `0.16581 ± 0.01141` | `5899.1 ms` | `3.96 ms` | `12.1%` | `Active Ensemble Member` |
+| **TabArena RealMLP** (`realmlp`) | `0.16789 ± 0.01099` | `308.5 ms` | `5.10 ms` | `21.1%` | `Active Ensemble Member` |
 
 ---
 
@@ -66,6 +67,7 @@ Every row below corresponds to a verified out-of-fold promotion recorded as an *
 | **Gen 2** | `pipeline/preprocess.py` | `median_impute`, `winsorize_iqr` | `0.17025` | `+0.00045` | Replacing mean imputation with median imputation and IQR winsorization will reduce the influence of extreme values in high-residual columns... |
 | **Gen 3** | `pipeline/postprocess.py` | `tail_shrinkage`, `isotonic_pav_calibration` | `0.17012` | `+0.00013` | Applying James-Stein tail shrinkage followed by isotonic PAV calibration will reduce the Brier score from 0.3316 to below 0.25 by correcting the... |
 | **Gen 4** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned` | `0.16754` | `+0.00258` | Replacing neural heads with tuned GBDTs will reduce under-prediction bias for high-margin teams by leveraging native non-linear splitting on ordinal and... |
+| **Gen 5** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head` | `0.16730` | `+0.00024` | Coordinate-ascent probe on `model`: Test 4-model ensemble adding `TabArena RealMLP (T+E) Parametric-Mish MLP` |
 
 ---
 
@@ -77,9 +79,9 @@ flowchart LR
     SPLIT --> PRE["1. Preprocessing: median_impute, winsorize_iqr"]
     PRE --> FEAT["2. Features: raw_passthrough"]
     FEAT --> OBJ["3. Objective: standard_task_loss"]
-    OBJ --> M0["4. Ensemble: Optuna LightGBM (56%) + CatBoost Symmetric (29%) + Optuna XGBoost (15%)"]
+    OBJ --> M0["4. Ensemble: Optuna LightGBM (44%) + CatBoost Symmetric (23%) + Optuna XGBoost (12%) + TabArena RealMLP (21%)"]
     M0 --> POST["5. Post-Processing: tail_shrinkage, isotonic_pav_calibration"]
-    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.16754)"]
+    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.16730)"]
 ```
 
 | Deliverable | Role in Production Workflow |
