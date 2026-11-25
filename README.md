@@ -2,7 +2,7 @@
 
 [![Autonomous Synthesis](https://img.shields.io/badge/Synthesized%20By-sovLoop%20(Stealth)-0A66C2?style=for-the-badge)](#how-this-pipeline-was-built)
 [![Foundation LLM](https://img.shields.io/badge/Model-qwen3.5%3A9b-111827?style=for-the-badge)](#how-this-pipeline-was-built)
-[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.16688-059669?style=for-the-badge)](#verified-validation-benchmark)
+[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.16670-059669?style=for-the-badge)](#verified-validation-benchmark)
 [![Security](https://img.shields.io/badge/Zero--Pickle-CWE--502%20Compliant-374151?style=for-the-badge)](#governance--production-guarantees)
 [![Kaggle Public Notebook](https://img.shields.io/badge/Kaggle%20Notebook-Public%20Kernel-20BEFF?style=for-the-badge)](https://www.kaggle.com/code/stefanoclss/march-machine-learning-mania-2026)
 [![Kaggle Challenge](https://img.shields.io/badge/Challenge-Benchmark-0284C7?style=for-the-badge)](https://www.kaggle.com/competitions/march-machine-learning-mania-2026)
@@ -37,8 +37,8 @@ Production data science teams need pipelines that are not only accurate, but **r
 | **Target Variable (`y`)** | `Pred` (`binary_classification`) |
 | **Evaluation KPI** | `BRIER` (Lower is better) |
 | **Baseline 5-Fold OOF Score** | `0.17154` |
-| **Champion 5-Fold OOF Score** | **`0.16688`** (`+0.00466` verified lift vs. baseline) |
-| **Cross-Fold Stability (Std. Dev.)** | `±0.01059` across `5` strict folds |
+| **Champion 5-Fold OOF Score** | **`0.16670`** (`+0.00484` verified lift vs. baseline) |
+| **Cross-Fold Stability (Std. Dev.)** | `±0.01065` across `5` strict folds |
 | **Synthesis LLM** | `qwen3.5:9b` (via **sovLoop**) |
 
 ---
@@ -49,11 +49,11 @@ Every individual model inside the unrestricted ensemble is benchmarked independe
 
 | Model Family (`key`) | Standalone Val Score | Mean Fold Fit | Mean Fold Inference | Ensemble Weight | Deployment Role |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **TabArena ModernNCA** (`nca`) | `0.16519 ± 0.00952` | `308.5 ms` | `7.76 ms` | `45.0%` | `Best Solo Accuracy` |
-| **Optuna LightGBM** (`lgbm`) | `0.16527 ± 0.01127` | `1865.6 ms` | `4.16 ms` | `25.4%` | `Fastest Low-Latency` |
-| **CatBoost Symmetric** (`catboost`) | `0.16558 ± 0.01188` | `3297.1 ms` | `4.73 ms` | `13.8%` | `Active Ensemble Member` |
-| **Optuna XGBoost** (`xgb`) | `0.16590 ± 0.01136` | `5899.1 ms` | `4.58 ms` | `7.3%` | `Active Ensemble Member` |
-| **TabArena RealMLP** (`realmlp`) | `0.16803 ± 0.01085` | `308.5 ms` | `7.53 ms` | `8.5%` | `Active Ensemble Member` |
+| **TabArena ModernNCA** (`nca`) | `0.16518 ± 0.00969` | `308.5 ms` | `14.04 ms` | `42.8%` | `Best Solo Accuracy` |
+| **Optuna XGBoost** (`xgb`) | `0.16524 ± 0.01156` | `907.9 ms` | `4.03 ms` | `23.3%` | `Active Ensemble Member` |
+| **CatBoost Symmetric** (`catboost`) | `0.16530 ± 0.01127` | `3248.9 ms` | `4.32 ms` | `24.8%` | `Active Ensemble Member` |
+| **LightGBM Baseline** (`lgbm`) | `0.16724 ± 0.01123` | `530.7 ms` | `2.96 ms` | `0.0%` | `Fastest Low-Latency` |
+| **TabArena RealMLP** (`realmlp`) | `0.16871 ± 0.00945` | `308.5 ms` | `13.38 ms` | `9.0%` | `Active Ensemble Member` |
 
 ---
 
@@ -70,6 +70,10 @@ Every row below corresponds to a verified out-of-fold promotion recorded as an *
 | **Gen 4** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned` | `0.16754` | `+0.00258` | Replacing neural heads with tuned GBDTs will reduce under-prediction bias for high-margin teams by leveraging native non-linear splitting on ordinal and... |
 | **Gen 5** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head` | `0.16730` | `+0.00024` | Coordinate-ascent probe on `model`: Test 4-model ensemble adding `TabArena RealMLP (T+E) Parametric-Mish MLP` |
 | **Gen 6** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head`, `modern_nca_head` | `0.16688` | `+0.00043` | Coordinate-ascent probe on `model`: Test 5-model ensemble adding `TabArena ModernNCA Soft Neighborhood Head` |
+| **Gen 7** | `pipeline/preprocess.py` | `median_impute`, `winsorize_iqr`, `missing_indicators` | `0.16681` | `+0.00006` | Coordinate-ascent probe on `preprocess`: Nullness Indicator Flags |
+| **Gen 8** | `pipeline/preprocess.py` | `median_impute`, `winsorize_iqr`, `oof_target_encoding` | `0.16678` | `+0.00003` | Applying OOF target encoding to high-leverage numeric proxies will capture latent outcome dependence suppressed by current winsorization alone. |
+| **Gen 9** | `pipeline/preprocess.py` | `robust_zscore` | `0.16678` | `+0.00000` | Applying robust scaling to the numeric feature space ensures stable gradient flows and outlier immunity for downstream non-linear feature interactions... |
+| **Gen 10** | `pipeline/models.py` | `catboost_tuned`, `lgbm_baseline`, `realmlp_tuned_head`, `modern_nca_head`, `xgb_optuna_tuned` | `0.16670` | `+0.00008` | Orthogonal candidate: Ridge L2 linear head provides a stable low-variance prior while GBDTs model residuals. |
 
 ---
 
@@ -78,12 +82,12 @@ Every row below corresponds to a verified out-of-fold promotion recorded as an *
 ```mermaid
 flowchart LR
     DATA["Raw Data (91 predictors)"] --> SPLIT["5-Fold CV Split"]
-    SPLIT --> PRE["1. Preprocessing: median_impute, winsorize_iqr"]
+    SPLIT --> PRE["1. Preprocessing: robust_zscore"]
     PRE --> FEAT["2. Features: raw_passthrough"]
     FEAT --> OBJ["3. Objective: standard_task_loss"]
-    OBJ --> M0["4. Ensemble: TabArena ModernNCA (45%) + Optuna LightGBM (25%) + CatBoost Symmetric (14%) + Optuna XGBoost (7%) + TabArena RealMLP (8%)"]
+    OBJ --> M0["4. Ensemble: TabArena ModernNCA (43%) + Optuna XGBoost (23%) + CatBoost Symmetric (25%) + TabArena RealMLP (9%)"]
     M0 --> POST["5. Post-Processing: tail_shrinkage, isotonic_pav_calibration"]
-    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.16688)"]
+    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.16670)"]
 ```
 
 | Deliverable | Role in Production Workflow |
