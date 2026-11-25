@@ -2,7 +2,7 @@
 
 [![Autonomous Synthesis](https://img.shields.io/badge/Synthesized%20By-sovLoop%20(Stealth)-0A66C2?style=for-the-badge)](#how-this-pipeline-was-built)
 [![Foundation LLM](https://img.shields.io/badge/Model-qwen3.5%3A9b-111827?style=for-the-badge)](#how-this-pipeline-was-built)
-[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.16767-059669?style=for-the-badge)](#verified-validation-benchmark)
+[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.16744-059669?style=for-the-badge)](#verified-validation-benchmark)
 [![Security](https://img.shields.io/badge/Zero--Pickle-CWE--502%20Compliant-374151?style=for-the-badge)](#governance--production-guarantees)
 [![Kaggle Public Notebook](https://img.shields.io/badge/Kaggle%20Notebook-Public%20Kernel-20BEFF?style=for-the-badge)](https://www.kaggle.com/code/stefanoclss/march-machine-learning-mania-2026)
 [![Kaggle Challenge](https://img.shields.io/badge/Challenge-Benchmark-0284C7?style=for-the-badge)](https://www.kaggle.com/competitions/march-machine-learning-mania-2026)
@@ -37,8 +37,8 @@ Production data science teams need pipelines that are not only accurate, but **r
 | **Target Variable (`y`)** | `Pred` (`binary_classification`) |
 | **Evaluation KPI** | `BRIER` (Lower is better) |
 | **Baseline 5-Fold OOF Score** | `0.17162` |
-| **Champion 5-Fold OOF Score** | **`0.16767`** (`+0.00396` verified lift vs. baseline) |
-| **Cross-Fold Stability (Std. Dev.)** | `±0.01161` across `5` strict folds |
+| **Champion 5-Fold OOF Score** | **`0.16744`** (`+0.00419` verified lift vs. baseline) |
+| **Cross-Fold Stability (Std. Dev.)** | `±0.01090` across `5` strict folds |
 | **Synthesis LLM** | `qwen3.5:9b` (via **sovLoop**) |
 
 ---
@@ -49,7 +49,11 @@ Every individual model inside the unrestricted ensemble is benchmarked independe
 
 | Model Family (`key`) | Standalone Val Score | Mean Fold Fit | Mean Fold Inference | Ensemble Weight | Deployment Role |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **CatBoost Symmetric** (`catboost`) | `0.16538 ± 0.01161` | `3304.0 ms` | `3.54 ms` | `100.0%` | `Best Solo + Fastest SLA` |
+| **CatBoost Symmetric** (`catboost`) | `0.16538 ± 0.01161` | `3304.0 ms` | `4.30 ms` | `35.9%` | `Best Solo Accuracy` |
+| **Optuna LightGBM** (`lgbm`) | `0.16547 ± 0.01070` | `1811.5 ms` | `4.29 ms` | `44.6%` | `Active Ensemble Member` |
+| **Optuna XGBoost** (`xgb`) | `0.16647 ± 0.01091` | `5719.9 ms` | `3.96 ms` | `3.0%` | `Active Ensemble Member` |
+| **CV-Tuned L2 Ridge Linear** (`ridge_l2`) | `0.16852 ± 0.00954` | `22.6 ms` | `1.17 ms` | `11.6%` | `Fastest Low-Latency` |
+| **TabArena RealMLP** (`realmlp`) | `0.16898 ± 0.01030` | `308.5 ms` | `3.81 ms` | `4.8%` | `Active Ensemble Member` |
 
 ---
 
@@ -61,6 +65,8 @@ Every row below corresponds to a verified out-of-fold promotion recorded as an *
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Gen 0** | `scaffold` | Baseline initialization | `0.17162` | `baseline` | Deterministic 5-fold leak-free baseline anchor |
 | **Gen 1** | `pipeline/models.py` | `catboost_tuned` | `0.16767` | `+0.00396` | Coordinate-ascent probe on `model`: Evaluate single estimator `CatBoost Symmetric GBDT (Ordered Boosting)` |
+| **Gen 2** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head` | `0.16757` | `+0.00010` | Combining Optuna-tuned LightGBM, XGBoost, and RealMLP captures diverse nonlinear interactions for high-probability/margin cases where CatBoost residuals... |
+| **Gen 3** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head`, `ridge_l2_linear` | `0.16744` | `+0.00014` | Coordinate-ascent probe on `model`: Test 5-model ensemble adding `CV-Tuned L2 Ridge Linear Ensemble Head` |
 
 ---
 
@@ -72,9 +78,9 @@ flowchart LR
     SPLIT --> PRE["1. Preprocessing: mean_impute"]
     PRE --> FEAT["2. Features: raw_passthrough"]
     FEAT --> OBJ["3. Objective: standard_task_loss"]
-    OBJ --> M0["4. Ensemble: CatBoost Symmetric (100%)"]
+    OBJ --> M0["4. Ensemble: CatBoost Symmetric (36%) + Optuna LightGBM (45%) + Optuna XGBoost (3%) + CV-Tuned L2 Ridge Linear (12%) + TabArena RealMLP (5%)"]
     M0 --> POST["5. Post-Processing: identity_passthrough"]
-    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.16767)"]
+    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.16744)"]
 ```
 
 | Deliverable | Role in Production Workflow |
