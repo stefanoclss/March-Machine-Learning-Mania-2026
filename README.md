@@ -2,7 +2,7 @@
 
 [![Autonomous Synthesis](https://img.shields.io/badge/Synthesized%20By-sovLoop%20(Stealth)-0A66C2?style=for-the-badge)](#how-this-pipeline-was-built)
 [![Foundation LLM](https://img.shields.io/badge/Model-qwen3.5%3A9b-111827?style=for-the-badge)](#how-this-pipeline-was-built)
-[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.16720-059669?style=for-the-badge)](#verified-validation-benchmark)
+[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.16702-059669?style=for-the-badge)](#verified-validation-benchmark)
 [![Security](https://img.shields.io/badge/Zero--Pickle-CWE--502%20Compliant-374151?style=for-the-badge)](#governance--production-guarantees)
 [![Kaggle Public Notebook](https://img.shields.io/badge/Kaggle%20Notebook-Public%20Kernel-20BEFF?style=for-the-badge)](https://www.kaggle.com/code/stefanoclss/march-machine-learning-mania-2026)
 [![Kaggle Challenge](https://img.shields.io/badge/Challenge-Benchmark-0284C7?style=for-the-badge)](https://www.kaggle.com/competitions/march-machine-learning-mania-2026)
@@ -37,8 +37,8 @@ Production data science teams need pipelines that are not only accurate, but **r
 | **Target Variable (`y`)** | `Pred` (`binary_classification`) |
 | **Evaluation KPI** | `BRIER` (Lower is better) |
 | **Baseline 5-Fold OOF Score** | `0.17162` |
-| **Champion 5-Fold OOF Score** | **`0.16720`** (`+0.00443` verified lift vs. baseline) |
-| **Cross-Fold Stability (Std. Dev.)** | `±0.01064` across `5` strict folds |
+| **Champion 5-Fold OOF Score** | **`0.16702`** (`+0.00460` verified lift vs. baseline) |
+| **Cross-Fold Stability (Std. Dev.)** | `±0.01088` across `5` strict folds |
 | **Synthesis LLM** | `qwen3.5:9b` (via **sovLoop**) |
 
 ---
@@ -49,12 +49,12 @@ Every individual model inside the unrestricted ensemble is benchmarked independe
 
 | Model Family (`key`) | Standalone Val Score | Mean Fold Fit | Mean Fold Inference | Ensemble Weight | Deployment Role |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **TabArena ModernNCA** (`nca`) | `0.16474 ± 0.00963` | `308.5 ms` | `7.38 ms` | `5.5%` | `Best Solo Accuracy` |
-| **CatBoost Symmetric** (`catboost`) | `0.16538 ± 0.01161` | `3304.0 ms` | `4.26 ms` | `34.2%` | `Active Ensemble Member` |
-| **Optuna LightGBM** (`lgbm`) | `0.16547 ± 0.01070` | `1811.5 ms` | `4.66 ms` | `42.9%` | `Active Ensemble Member` |
-| **Optuna XGBoost** (`xgb`) | `0.16647 ± 0.01091` | `5719.9 ms` | `4.09 ms` | `2.9%` | `Active Ensemble Member` |
-| **CV-Tuned L2 Ridge Linear** (`ridge_l2`) | `0.16852 ± 0.00954` | `22.6 ms` | `1.30 ms` | `11.2%` | `Fastest Low-Latency` |
-| **TabArena RealMLP** (`realmlp`) | `0.16898 ± 0.01030` | `308.5 ms` | `9.25 ms` | `3.2%` | `Active Ensemble Member` |
+| **TabArena ModernNCA** (`nca`) | `0.16472 ± 0.01000` | `308.5 ms` | `13.80 ms` | `8.5%` | `Best Solo Accuracy` |
+| **Optuna LightGBM** (`lgbm`) | `0.16493 ± 0.01152` | `1794.4 ms` | `4.33 ms` | `51.4%` | `Active Ensemble Member` |
+| **CatBoost Symmetric** (`catboost`) | `0.16564 ± 0.01144` | `3218.6 ms` | `4.79 ms` | `5.4%` | `Active Ensemble Member` |
+| **Optuna XGBoost** (`xgb`) | `0.16568 ± 0.01094` | `5582.5 ms` | `5.41 ms` | `22.6%` | `Active Ensemble Member` |
+| **CV-Tuned L2 Ridge Linear** (`ridge_l2`) | `0.16861 ± 0.00968` | `21.9 ms` | `1.45 ms` | `8.1%` | `Fastest Low-Latency` |
+| **TabArena RealMLP** (`realmlp`) | `0.16950 ± 0.01126` | `308.5 ms` | `14.32 ms` | `4.0%` | `Active Ensemble Member` |
 
 ---
 
@@ -69,6 +69,8 @@ Every row below corresponds to a verified out-of-fold promotion recorded as an *
 | **Gen 2** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head` | `0.16757` | `+0.00010` | Combining Optuna-tuned LightGBM, XGBoost, and RealMLP captures diverse nonlinear interactions for high-probability/margin cases where CatBoost residuals... |
 | **Gen 3** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head`, `ridge_l2_linear` | `0.16744` | `+0.00014` | Coordinate-ascent probe on `model`: Test 5-model ensemble adding `CV-Tuned L2 Ridge Linear Ensemble Head` |
 | **Gen 4** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head`, `ridge_l2_linear`, `modern_nca_head` | `0.16720` | `+0.00024` | Coordinate-ascent probe on `model`: Test 6-model ensemble adding `TabArena ModernNCA Soft Neighborhood Head` |
+| **Gen 5** | `pipeline/models.py` | `catboost_tuned`, `lgbm_optuna_tuned`, `xgb_optuna_tuned`, `realmlp_tuned_head`, `ridge_l2_linear`, `modern_nca_head`, `alignment_2d_convnext_unet` | `0.16715` | `+0.00005` | Coordinate-ascent probe on `model`: Test 7-model ensemble adding `2D Alignment ConvNeXt-Tiny U-Net + BiGRU + 3-View TTA (GPU)` |
+| **Gen 6** | `pipeline/features.py` (`feature_block_1`) | `synth:square:diff_srs_margin`, `synth:square:prior_srs_prob`, `synth:log1p:diff_log_seed` | `0.16702` | `+0.00013` | Explicitly synthesizing squared features for high-signal columns will ground the non-linear residual patterns, allowing GBDTs to model them as linear... |
 
 ---
 
@@ -78,11 +80,11 @@ Every row below corresponds to a verified out-of-fold promotion recorded as an *
 flowchart LR
     DATA["Raw Data (81 predictors)"] --> SPLIT["5-Fold CV Split"]
     SPLIT --> PRE["1. Preprocessing: mean_impute"]
-    PRE --> FEAT["2. Features: raw_passthrough"]
+    PRE --> FEAT["2. Features: synth:square:diff_srs_margin, synth:square:prior_srs_prob, synth:log1p:diff_log_seed"]
     FEAT --> OBJ["3. Objective: standard_task_loss"]
-    OBJ --> M0["4. Ensemble: TabArena ModernNCA (6%) + CatBoost Symmetric (34%) + Optuna LightGBM (43%) + Optuna XGBoost (3%) + CV-Tuned L2 Ridge Linear (11%) + TabArena RealMLP (3%)"]
+    OBJ --> M0["4. Ensemble: TabArena ModernNCA (9%) + Optuna LightGBM (51%) + CatBoost Symmetric (5%) + Optuna XGBoost (23%) + CV-Tuned L2 Ridge Linear (8%) + TabArena RealMLP (4%)"]
     M0 --> POST["5. Post-Processing: identity_passthrough"]
-    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.16720)"]
+    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.16702)"]
 ```
 
 | Deliverable | Role in Production Workflow |
