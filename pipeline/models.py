@@ -2,7 +2,7 @@
 
 Synthesized by sovLoop (Model: qwen3.5:9b)
 Target: `Pred` (binary_classification | BRIER)
-Active Model Operations: catboost_tuned, lgbm_baseline, realmlp_tuned_head, modern_nca_head, xgb_optuna_tuned
+Active Model Operations: catboost_tuned, lgbm_baseline, realmlp_tuned_head, modern_nca_head, xgb_optuna_tuned, tabm_periodic_mlp
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import pandas as pd
 
 optuna.logging.set_verbosity(optuna.logging.WARNING)
 
-ACTIVE_MODEL_OPS: tuple[str, ...] = ('catboost_tuned', 'lgbm_baseline', 'realmlp_tuned_head', 'modern_nca_head', 'xgb_optuna_tuned')
+ACTIVE_MODEL_OPS: tuple[str, ...] = ('catboost_tuned', 'lgbm_baseline', 'realmlp_tuned_head', 'modern_nca_head', 'xgb_optuna_tuned', 'tabm_periodic_mlp')
 IS_BINARY_TASK: bool = "binary_classification" == "binary_classification"
 
 
