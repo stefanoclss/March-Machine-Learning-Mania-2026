@@ -2,7 +2,7 @@
 
 [![Autonomous Synthesis](https://img.shields.io/badge/Synthesized%20By-sovLoop%20(Stealth)-0A66C2?style=for-the-badge)](#how-this-pipeline-was-built)
 [![Foundation LLM](https://img.shields.io/badge/Model-qwen3.5%3A9b-111827?style=for-the-badge)](#how-this-pipeline-was-built)
-[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.17025-059669?style=for-the-badge)](#verified-validation-benchmark)
+[![Validation](https://img.shields.io/badge/5--Fold%20OOF-BRIER%200.17012-059669?style=for-the-badge)](#verified-validation-benchmark)
 [![Security](https://img.shields.io/badge/Zero--Pickle-CWE--502%20Compliant-374151?style=for-the-badge)](#governance--production-guarantees)
 [![Kaggle Public Notebook](https://img.shields.io/badge/Kaggle%20Notebook-Public%20Kernel-20BEFF?style=for-the-badge)](https://www.kaggle.com/code/stefanoclss/march-machine-learning-mania-2026)
 [![Kaggle Challenge](https://img.shields.io/badge/Challenge-Benchmark-0284C7?style=for-the-badge)](https://www.kaggle.com/competitions/march-machine-learning-mania-2026)
@@ -37,8 +37,8 @@ Production data science teams need pipelines that are not only accurate, but **r
 | **Target Variable (`y`)** | `Pred` (`binary_classification`) |
 | **Evaluation KPI** | `BRIER` (Lower is better) |
 | **Baseline 5-Fold OOF Score** | `0.17154` |
-| **Champion 5-Fold OOF Score** | **`0.17025`** (`+0.00129` verified lift vs. baseline) |
-| **Cross-Fold Stability (Std. Dev.)** | `±0.01029` across `5` strict folds |
+| **Champion 5-Fold OOF Score** | **`0.17012`** (`+0.00142` verified lift vs. baseline) |
+| **Cross-Fold Stability (Std. Dev.)** | `±0.00988` across `5` strict folds |
 | **Synthesis LLM** | `qwen3.5:9b` (via **sovLoop**) |
 
 ---
@@ -49,8 +49,8 @@ Every individual model inside the unrestricted ensemble is benchmarked independe
 
 | Model Family (`key`) | Standalone Val Score | Mean Fold Fit | Mean Fold Inference | Ensemble Weight | Deployment Role |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **TabArena RealMLP** (`realmlp`) | `0.16853 ± 0.01011` | `308.5 ms` | `11.11 ms` | `0.0%` | `Best Solo Accuracy` |
-| **RFF Residual MLP** (`mlp`) | `0.16976 ± 0.01052` | `308.5 ms` | `9.78 ms` | `0.0%` | `Fastest Low-Latency` |
+| **TabArena RealMLP** (`realmlp`) | `0.16840 ± 0.00976` | `308.5 ms` | `8.18 ms` | `0.0%` | `Best Solo Accuracy` |
+| **RFF Residual MLP** (`mlp`) | `0.16974 ± 0.01009` | `308.5 ms` | `7.94 ms` | `0.0%` | `Fastest Low-Latency` |
 
 ---
 
@@ -63,6 +63,7 @@ Every row below corresponds to a verified out-of-fold promotion recorded as an *
 | **Gen 0** | `scaffold` | Baseline initialization | `0.17154` | `baseline` | Deterministic 5-fold leak-free baseline anchor |
 | **Gen 1** | `pipeline/models.py` | `realmlp_tuned_head`, `rff_mlp_neural_head` | `0.17070` | `+0.00084` | Replacing the saturated L2 Ridge baseline with RealMLP and RFF MLP neural heads will capture non-linear feature interactions in high-value quantiles... |
 | **Gen 2** | `pipeline/preprocess.py` | `median_impute`, `winsorize_iqr` | `0.17025` | `+0.00045` | Replacing mean imputation with median imputation and IQR winsorization will reduce the influence of extreme values in high-residual columns... |
+| **Gen 3** | `pipeline/postprocess.py` | `tail_shrinkage`, `isotonic_pav_calibration` | `0.17012` | `+0.00013` | Applying James-Stein tail shrinkage followed by isotonic PAV calibration will reduce the Brier score from 0.3316 to below 0.25 by correcting the... |
 
 ---
 
@@ -75,8 +76,8 @@ flowchart LR
     PRE --> FEAT["2. Features: raw_passthrough"]
     FEAT --> OBJ["3. Objective: standard_task_loss"]
     OBJ --> M0["4. Ensemble: realmlp_tuned_head, rff_mlp_neural_head"]
-    M0 --> POST["5. Post-Processing: identity_passthrough"]
-    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.17025)"]
+    M0 --> POST["5. Post-Processing: tail_shrinkage, isotonic_pav_calibration"]
+    POST --> OUT["5-Fold OOF & Holdout (BRIER = 0.17012)"]
 ```
 
 | Deliverable | Role in Production Workflow |
